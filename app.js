@@ -692,23 +692,26 @@ MIDI.player = MIDI.player || {};
 
 			function requestAudio(soundfont, programId, index, key) {
 				var url = soundfont[key];
-				if (url) {
-					bufferPending[programId] ++;
-					loadAudio(url, function(buffer) {
-						buffer.id = key;
-						var noteId = MIDI.keyToNote[key];
-						audioBuffers[programId + 'x' + noteId] = buffer;
-						///
-						if (--bufferPending[programId] === 0) {
-							var percent = index / 87;
-							soundfont.isLoaded = true;
-							MIDI.DEBUG && console.log('loaded: ', instrument);
-							waitForEnd(instrument);
-						}
-					}, function() {
-						MIDI.handleError('audio could not load', arguments);
-					});
+				if (!url) {
+					return;
 				}
+
+				bufferPending[programId] ++;
+
+				loadAudio(url).then((buffer) => {
+					buffer.id = key;
+					var noteId = MIDI.keyToNote[key];
+					audioBuffers[programId + 'x' + noteId] = buffer;
+					///
+					if (--bufferPending[programId] === 0) {
+						var percent = index / 87;
+						soundfont.isLoaded = true;
+						MIDI.DEBUG && console.log('loaded: ', instrument);
+						waitForEnd(instrument);
+					}
+				}).catch(() => {
+					MIDI.handleError('audio could not load', arguments);
+				});
 			};
 			///
 			var bufferPending = {};
@@ -735,33 +738,14 @@ MIDI.player = MIDI.player || {};
 			setTimeout(waitForEnd, 1);
 		};
 
-		function loadAudio(url, onsuccess, onerror) {
-			if (useStreamingBuffer) {
-				var audio = new Audio();
-				audio.src = url;
-				audio.controls = false;
-				audio.autoplay = false;
-				audio.preload = false;
-				audio.addEventListener('canplay', function() {
-					onsuccess && onsuccess(audio);
-				});
-				audio.addEventListener('error', function(err) {
-					onerror && onerror(err);
-				});
-				document.body.appendChild(audio);
-			} else if (url.indexOf('data:audio') === 0) { // Base64 string
+		function loadAudio(url) {
+			return new Promise((resolve, reject) => {
+				console.log('loadAudio');
+
 				var base64 = url.split(',')[1];
 				var buffer = Base64Binary.decodeArrayBuffer(base64);
-				ctx.decodeAudioData(buffer, onsuccess, onerror);
-			} else { // XMLHTTP buffer
-				var request = new XMLHttpRequest();
-				request.open('GET', url, true);
-				request.responseType = 'arraybuffer';
-				request.onload = function() {
-					ctx.decodeAudioData(request.response, onsuccess, onerror);
-				};
-				request.send();
-			}
+				ctx.decodeAudioData(buffer, resolve, reject);
+			});
 		};
 
 		function createAudioContext() {
@@ -769,4 +753,3 @@ MIDI.player = MIDI.player || {};
 		};
 	})();
 })(MIDI);
-
