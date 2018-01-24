@@ -440,28 +440,21 @@ MIDI.player = MIDI.player || {};
 })(MIDI);
 
 (function(MIDI) {
-
 	window.AudioContext && (function() {
-
 		var audioContext = null; // new AudioContext();
-		var useStreamingBuffer = false; // !!audioContext.createMediaElementSource;
 		var midi = MIDI.WebAudio = {api: 'webaudio'};
 		var ctx; // audio context
 		var sources = {};
 		var effects = {};
 		var masterVolume = 127;
 		var audioBuffers = {};
-		///
+
 		midi.audioBuffers = audioBuffers;
 		midi.messageHandler = {};
-		///
-		midi.send = function(data, delay) {
 
-		};
+		midi.send = function(data, delay) { };
 
-		midi.setController = function(channelId, type, value, delay) {
-
-		};
+		midi.setController = function(channelId, type, value, delay) { };
 
 		midi.setVolume = function(channelId, volume, delay) {
 			if (delay) {
@@ -512,13 +505,8 @@ MIDI.player = MIDI.player || {};
 				delay += ctx.currentTime;
 			}
 
-			/// create audio buffer
-			if (useStreamingBuffer) {
-				var source = ctx.createMediaElementSource(buffer);
-			} else { // XMLHTTP buffer
-				var source = ctx.createBufferSource();
-				source.buffer = buffer;
-			}
+			var source = ctx.createBufferSource();
+			source.buffer = buffer;
 
 			/// add effects to buffer
 			if (effects) {
@@ -537,20 +525,7 @@ MIDI.player = MIDI.player || {};
 			source.gainNode.connect(ctx.destination);
 			source.gainNode.gain.value = Math.min(1.0, Math.max(-1.0, gain));
 			source.connect(source.gainNode);
-			///
-			if (useStreamingBuffer) {
-				if (delay) {
-					return setTimeout(function() {
-						buffer.currentTime = 0;
-						buffer.play()
-					}, delay * 1000);
-				} else {
-					buffer.currentTime = 0;
-					buffer.play()
-				}
-			} else {
-				source.start(delay || 0);
-			}
+			source.start(delay || 0);
 
 			sources[channelId + 'x' + noteId] = source;
 
@@ -580,25 +555,15 @@ MIDI.player = MIDI.player || {};
 						gain.linearRampToValueAtTime(gain.value, delay);
 						gain.linearRampToValueAtTime(-1.0, delay + 0.3);
 					}
-					///
-					if (useStreamingBuffer) {
-						if (delay) {
-							setTimeout(function() {
-								buffer.pause();
-							}, delay * 1000);
-						} else {
-							buffer.pause();
-						}
+
+					if (source.noteOff) {
+						source.noteOff(delay + 0.5);
 					} else {
-						if (source.noteOff) {
-							source.noteOff(delay + 0.5);
-						} else {
-							source.stop(delay + 0.5);
-						}
+						source.stop(delay + 0.5);
 					}
-					///
+
 					delete sources[channelId + 'x' + noteId];
-					///
+
 					return source;
 				}
 			}
@@ -611,13 +576,6 @@ MIDI.player = MIDI.player || {};
 
 		midi.setContext = function(newCtx, onsuccess, onerror) {
 			ctx = newCtx;
-
-			/// tuna.js effects module - https://github.com/Dinahmoe/tuna
-			if (typeof Tuna !== 'undefined') {
-				if (!(ctx.tunajs instanceof Tuna)) {
-					ctx.tunajs = new Tuna(ctx);
-				}
-			}
 
 			/// loading audio files
 			var urls = [];
