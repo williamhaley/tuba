@@ -1,9 +1,17 @@
 # Tuba
 
+Run
+
 ```
 npm install -g parcel-bundler
 npm install
 npm start
+```
+
+Build
+
+```
+npm run build
 ```
 
 # Sources

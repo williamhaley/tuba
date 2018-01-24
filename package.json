@@ -4,13 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "rm -rf ./build/* && parcel build --no-minify --public-url=./ --out-dir=./dist ./src/index.html",
     "start": "parcel --no-cache --out-dir=./dist ./src/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {},
-  "dependencies": {
-    "parcel-bundler": "^1.5.0"
-  }
+  "dependencies": {}
 }
