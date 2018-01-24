@@ -123,9 +123,7 @@ MIDI.player = MIDI.player || {};
 })(window.AudioContext);
 
 function asId(name) {
-	return name.replace(/[^a-z0-9_ ]/gi, '').
-				replace(/[ ]/g, '_').
-				toLowerCase();
+	return name.replace(/[^a-z0-9_ ]/gi, '').replace(/[ ]/g, '_').toLowerCase();
 };
 
 var GM = (function(arr) {
@@ -251,40 +249,19 @@ const connect = {
 	webaudio: function(opts) {
 		const context = 'WebAudio';
 
-		var instruments = [opts.instrument];
-		var pending = instruments.length;
-
-		function onEnd() {
+		if (MIDI.Soundfont[opts.instrument]) { // already loaded
 			MIDI[context].connect(opts);
-		};
 
-		if (!instruments.length) {
-			onEnd();
+			return;
 		}
 
-		for (var i = 0; i < instruments.length; i ++) {
-			var programId = instruments[i];
-			if (MIDI.Soundfont[programId]) { // already loaded
-				pending -= 1;
+		// needs to be requested
+		sendRequest(opts.instrument, FORMAT).then(() => {
+			MIDI[context].connect(opts);
 
-				if (pending === 0) {
-					onEnd();
-				}
-
-				return;
-			}
-
-			// needs to be requested
-			sendRequest(instruments[i], FORMAT).then(() => {
-				pending -= 1;
-
-				if (pending === 0) {
-					onEnd();
-				}
-			}).catch((e) => {
-				console.error(e);
-			});
-		}
+		}).catch((e) => {
+			console.error(e);
+		});
 	}
 };
 
@@ -434,10 +411,10 @@ window.AudioContext && (function() {
 
 	midi.connect = function(opts) {
 		MIDI.setDefaultPlugin(midi);
-		midi.setContext(ctx || createAudioContext(), opts.onsuccess);
+		midi.setContext(createAudioContext(), opts);
 	};
 
-	midi.setContext = function(newCtx, onsuccess, onerror) {
+	midi.setContext = function(newCtx) {
 		ctx = newCtx;
 
 		/// loading audio files
@@ -453,10 +430,6 @@ window.AudioContext && (function() {
 					return;
 				}
 			}
-			if (onsuccess) { // run onsuccess once
-				onsuccess();
-				onsuccess = null;
-			}
 		};
 
 		function requestAudio(soundfont, programId, index, key) {
@@ -471,9 +444,8 @@ window.AudioContext && (function() {
 				buffer.id = key;
 				var noteId = MIDI.keyToNote[key];
 				audioBuffers[programId + 'x' + noteId] = buffer;
-				///
+
 				if (--bufferPending[programId] === 0) {
-					var percent = index / 87;
 					soundfont.isLoaded = true;
 					waitForEnd(instrument);
 				}
@@ -483,22 +455,23 @@ window.AudioContext && (function() {
 		};
 		///
 		var bufferPending = {};
+
 		var soundfonts = MIDI.Soundfont;
 		for (var instrument in soundfonts) {
 			var soundfont = soundfonts[instrument];
 			if (soundfont.isLoaded) {
 				continue;
-			} else {
-				var spec = MIDI.GM.byName[instrument];
-				if (spec) {
-					var programId = spec.program;
-					///
-					bufferPending[programId] = 0;
-					///
-					for (var index = 0; index < urls.length; index++) {
-						var key = urls[index];
-						requestAudio(soundfont, programId, index, key);
-					}
+			}
+
+			var spec = MIDI.GM.byName[instrument];
+			if (spec) {
+				var programId = spec.program;
+				///
+				bufferPending[programId] = 0;
+				///
+				for (var index = 0; index < urls.length; index++) {
+					var key = urls[index];
+					requestAudio(soundfont, programId, index, key);
 				}
 			}
 		}
