@@ -1,12 +1,14 @@
 # Tuba
 
 ```
-npm install -g webpack
+npm install -g parcel-bundler
 npm install
-webpack
+npm start
 ```
 
-# Source
+# Sources
 
-https://galactic.ink/midi-js/Basic.html
-
+* [Piano UI - Philip Zastrow](https://codepen.io/zastrow/pen/oDBki)
+* [Source code](https://galactic.ink/midi-js/)
+* [Inspiration/Source code - Michael Deal](https://github.com/mudcube)
+* [Inspiration/Source code - Casey Rule](http://www.caseyrule.com/projects/piano/)

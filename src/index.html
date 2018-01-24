@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+<ul class="set">
+	<li class="white b" onclick="playNote(35);">B1</li>
+	<li class="black as" onclick="playNote(96);">A#</li>
+	<li class="white a" onclick="playNote(45);">A2</li>
+	<li class="black gs" onclick="playNote(96);">G#</li>
+	<li class="white g" onclick="playNote(43);">G2</li>
+	<li class="black fs" onclick="playNote(96);">F#</li>
+	<li class="white f" onclick="playNote(41);">F2</li>
+	<li class="white e" onclick="playNote(40);">E2</li>
+	<li class="black ds" onclick="playNote(96);">D#</li>
+	<li class="white d" onclick="playNote(38);">D</li>
+	<li class="black cs" onclick="playNote(96);">C#</li>
+	<li class="white c" onclick="playNote(36);">C</li>
+</ul>
+
+<script src="./app.js"></script>
+<script>
+(function() {
+	window.onload = function () {
+		MIDI.loadPlugin({
+			instrument: 'tuba',
+		}).then(() => {
+			window.playNote = function (noteNumber) {
+				console.log(`play - id ${noteNumber}`);
+				const delay = 0; // play one note every quarter second
+				const note = noteNumber;
+				const velocity = 127; // how hard the note hits
+
+				// play the note
+				MIDI.setVolume(0, velocity);
+				MIDI.noteOn(0, note, velocity, delay);
+				MIDI.noteOff(0, note, delay + 0.75);
+			}
+		}).catch((e) => {
+			console.error(e);
+		});
+	};
+})();
+</script>
+</body>
+</html>
+

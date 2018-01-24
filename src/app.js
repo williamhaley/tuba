@@ -1,4 +1,5 @@
-import base64js from 'base64-js';
+// Gets a URL referencing the asset.
+import tubaAudioURL from './tuba-ogg.dat';
 
 var Base64Binary = {
 	_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
@@ -191,10 +192,8 @@ MIDI.loadPlugin = function(opts = {}) {
 };
 
 function sendRequest(programId) {
-	const url = `./soundfont/${programId}-${FORMAT}.js`;
-
 	return new Promise((resolve, reject) => {
-		fetch(url).then(function (res) {
+		fetch(tubaAudioURL).then(function (res) {
 			let script = document.createElement('script');
 			script.language = 'javascript';
 			script.type = 'text/javascript';
@@ -392,6 +391,8 @@ function sendRequest(programId) {
 			for (var index = 0; index < keyURLs.length; index++) {
 				requestAudio(soundfont, spec.program, index, keyURLs[index]);
 			}
+
+			console.log(MIDI.keyToNote);
 		}
 		///
 		setTimeout(waitForEnd, 1);
