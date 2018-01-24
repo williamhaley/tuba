@@ -426,9 +426,7 @@ if (typeof MIDI === 'undefined') {
 	};
 
 	MIDI.handleError = function(type, args) {
-		if (console && console.error) {
-			console.error(type, args);
-		}
+		console.error(type, args);
 	};
 
 })(MIDI);
@@ -438,12 +436,7 @@ if (typeof MIDI === 'undefined') MIDI = {};
 MIDI.Soundfont = MIDI.Soundfont || {};
 MIDI.player = MIDI.player || {};
 
-(function(MIDI) { 'use strict';
-
-	if (typeof console !== 'undefined' && console.log) {
-		console.log('%câ™¥ MIDI.js 0.4.2 â™¥', 'color: red;');
-	}
-
+(function(MIDI) {
 	MIDI.DEBUG = true;
 	MIDI.soundfontUrl = './soundfont/';
 
@@ -451,9 +444,8 @@ MIDI.player = MIDI.player || {};
 	 * opts{}
 	 * onsuccess
 	 * onerror
-	 * onprogress
 	 */
-	MIDI.loadPlugin = function(opts = {}, onsuccess, onerror, onprogress) {
+	MIDI.loadPlugin = function(opts = {}, onsuccess, onerror) {
 		opts.api = opts.api || MIDI.__api;
 
 		function onDetect(supports) {
@@ -535,11 +527,10 @@ MIDI.player = MIDI.player || {};
 			return res;
 		};
 
-		return function(opts, onsuccess, onerror, onprogress) {
+		return function(opts, onsuccess, onerror) {
 			opts = opts || {};
 			if (typeof opts !== 'object') opts = {instrument: opts};
 			if (onerror) opts.onerror = onerror;
-			if (onprogress) opts.onprogress = onprogress;
 			if (onsuccess) opts.onsuccess = onsuccess;
 			///
 			opts.format = MIDI.__audioFormat;
@@ -569,52 +560,59 @@ MIDI.player = MIDI.player || {};
 	function requestQueue(opts, context) {
 		var audioFormat = opts.format;
 		var instruments = opts.instruments;
-		var onprogress = opts.onprogress;
 		var onerror = opts.onerror;
-		///
-		var length = instruments.length;
-		var pending = length;
-		///
+		var pending = instruments.length;
+
 		function onEnd() {
-			onprogress && onprogress('load', 1.0);
 			MIDI[context].connect(opts);
 		};
-		///
-		if (length) {
-			for (var i = 0; i < length; i ++) {
-				var programId = instruments[i];
-				if (MIDI.Soundfont[programId]) { // already loaded
-					!--pending && onEnd();
-				} else { // needs to be requested
-					sendRequest(instruments[i], audioFormat, function() {
-						!--pending && onEnd();
-					}, onerror);
-				}
-			}
-		} else {
+
+		if (!instruments.length) {
 			onEnd();
+		}
+
+		for (var i = 0; i < instruments.length; i ++) {
+			var programId = instruments[i];
+			if (MIDI.Soundfont[programId]) { // already loaded
+				pending -= 1;
+
+				if (pending === 0) {
+					onEnd();
+				}
+
+				return;
+			}
+
+			// needs to be requested
+			sendRequest(instruments[i], audioFormat).then(() => {
+				pending -= 1;
+
+				if (pending === 0) {
+					onEnd();
+				}
+			}).catch(() => {
+				onerror();
+			});
 		}
 	};
 
-	function sendRequest(programId, audioFormat, onsuccess, onerror) {
+	function sendRequest(programId, audioFormat) {
 		const url = `${MIDI.soundfontUrl}${programId}-${audioFormat}.js`;
 
-		fetch(url).then(function (res) {
-			let script = document.createElement('script');
-			script.language = 'javascript';
-			script.type = 'text/javascript';
-			res.text().then((text) => {
-				script.text = text;
-				document.body.appendChild(script);
+		return new Promise((resolve, reject) => {
+			fetch(url).then(function (res) {
+				let script = document.createElement('script');
+				script.language = 'javascript';
+				script.type = 'text/javascript';
+				res.text().then((text) => {
+					script.text = text;
+					document.body.appendChild(script);
 
-				onsuccess();
+					resolve();
+				});
+			}).catch(function (e) {
+				reject();
 			});
-		}).catch(function (e) {
-			if (onerror) {
-				onerror();
-			}
-
-			console.log(e);
 		});
 	};
 
@@ -989,7 +987,7 @@ MIDI.player = MIDI.player || {};
 			return ctx;
 		};
 
-		midi.setContext = function(newCtx, onsuccess, onprogress, onerror) {
+		midi.setContext = function(newCtx, onsuccess, onerror) {
 			ctx = newCtx;
 
 			/// tuna.js effects module - https://github.com/Dinahmoe/tuna
