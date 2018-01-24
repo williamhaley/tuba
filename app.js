@@ -4,43 +4,43 @@ var Base64Binary = {
 	_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
 
 	/* will return a  Uint8Array type */
-	decodeArrayBuffer: function(input) {
-		var bytes = Math.ceil( (3*input.length) / 4.0);
-		var ab = new ArrayBuffer(bytes);
+	decodeArrayBuffer: function(base64String) {
+		// TODO WFH What is this?
+		// Seems like we're estimating the size of the buffer?
+		let bytes = Math.ceil((3 * base64String.length) / 4.0);
 
-		this.decode(input, ab);
+		let arrayBuffer = new ArrayBuffer(bytes);
 
-		return ab;
+		this.decode(base64String, arrayBuffer);
+
+		return arrayBuffer;
 	},
 
-	decode: function(input, arrayBuffer) {
+	decode: function(base64String, arrayBuffer) {
 		//get last chars to see if are valid
-		var lkey1 = this._keyStr.indexOf(input.charAt(input.length-1));
-		var lkey2 = this._keyStr.indexOf(input.charAt(input.length-1));
+		var lkey1 = this._keyStr.indexOf(base64String.charAt(base64String.length-1));
+		var lkey2 = this._keyStr.indexOf(base64String.charAt(base64String.length-1));
 
-		var bytes = Math.ceil( (3*input.length) / 4.0);
+		var bytes = Math.ceil((3 * base64String.length) / 4.0);
 		if (lkey1 == 64) bytes--; //padding chars, so skip
 		if (lkey2 == 64) bytes--; //padding chars, so skip
 
-		var uarray;
 		var chr1, chr2, chr3;
 		var enc1, enc2, enc3, enc4;
 		var i = 0;
 		var j = 0;
 
-		if (arrayBuffer)
-			uarray = new Uint8Array(arrayBuffer);
-		else
-			uarray = new Uint8Array(bytes);
+		let uarray = new Uint8Array(arrayBuffer);
 
-		input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+		base64String = base64String.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 
+		// TODO WFH Ah, this may explain our 3 * x / 4
 		for (i=0; i<bytes; i+=3) {
 			//get the 3 octects in 4 ascii chars
-			enc1 = this._keyStr.indexOf(input.charAt(j++));
-			enc2 = this._keyStr.indexOf(input.charAt(j++));
-			enc3 = this._keyStr.indexOf(input.charAt(j++));
-			enc4 = this._keyStr.indexOf(input.charAt(j++));
+			enc1 = this._keyStr.indexOf(base64String.charAt(j++));
+			enc2 = this._keyStr.indexOf(base64String.charAt(j++));
+			enc3 = this._keyStr.indexOf(base64String.charAt(j++));
+			enc4 = this._keyStr.indexOf(base64String.charAt(j++));
 
 			chr1 = (enc1 << 2) | (enc2 >> 4);
 			chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
@@ -310,17 +310,6 @@ if (typeof MIDI === 'undefined') {
 		}
 	};
 
-	MIDI.getProgram = function(channelId) {
-		return getParam('program', channelId);
-	};
-
-	MIDI.programChange = function(channelId, program, delay) {
-		var spec = GM.getProgramSpec(program);
-		if (spec && isFinite(program = spec.program)) {
-			setParam('program', channelId, program, delay);
-		}
-	};
-
 	MIDI.getMono = function(channelId) {
 		return getParam('mono', channelId);
 	};
@@ -328,26 +317,6 @@ if (typeof MIDI === 'undefined') {
 	MIDI.setMono = function(channelId, truthy, delay) {
 		if (isFinite(truthy)) {
 			setParam('mono', channelId, truthy, delay);
-		}
-	};
-
-	MIDI.getOmni = function(channelId) {
-		return getParam('omni', channelId);
-	};
-
-	MIDI.setOmni = function(channelId, truthy, delay) {
-		if (isFinite(truthy)) {
-			setParam('omni', channelId, truthy, delay);
-		}
-	};
-
-	MIDI.getSolo = function(channelId) {
-		return getParam('solo', channelId);
-	};
-
-	MIDI.setSolo = function(channelId, truthy, delay) {
-		if (isFinite(truthy)) {
-			setParam('solo', channelId, truthy, delay);
 		}
 	};
 
@@ -441,11 +410,13 @@ MIDI.player = MIDI.player || {};
 	MIDI.soundfontUrl = './soundfont/';
 
 	/*
+	 * loadPlugin
+	 *
 	 * opts{}
-	 * onsuccess
-	 * onerror
+	 *
+	 * returns - Promise
 	 */
-	MIDI.loadPlugin = function(opts = {}, onsuccess, onerror) {
+	MIDI.loadPlugin = function(opts = {}) {
 		opts.api = opts.api || MIDI.__api;
 
 		function onDetect(supports) {
@@ -486,23 +457,17 @@ MIDI.player = MIDI.player || {};
 			MIDI.soundfontUrl = opts.soundfontUrl;
 		}
 
-		/// Detect the best type of audio to use
-		if (MIDI.supports) {
-			onDetect(MIDI.supports);
-		} else {
-			MIDI.audioDetect(onDetect);
-		}
-	};
+		return new Promise((resolve) => {
+			/// Detect the best type of audio to use
+			if (MIDI.supports) {
+				onDetect(MIDI.supports);
+			} else {
+				MIDI.audioDetect(onDetect);
+			}
 
-	/*
-		MIDI.loadProgram('banjo', onsuccess, onerror, onprogress);
-		MIDI.loadProgram({
-			instrument: 'banjo',
-			onsuccess: function(){},
-			onerror: function(){},
-			onprogress: function(state, percent){}
-		})
-	*/
+			resolve();
+		});
+	};
 
 	MIDI.loadProgram = (function() {
 
@@ -590,14 +555,16 @@ MIDI.player = MIDI.player || {};
 				if (pending === 0) {
 					onEnd();
 				}
-			}).catch(() => {
+			}).catch((e) => {
+				console.error(e);
+
 				onerror();
 			});
 		}
 	};
 
 	function sendRequest(programId, audioFormat) {
-		const url = `${MIDI.soundfontUrl}${programId}-${audioFormat}.js`;
+		const url = `./soundfont/${programId}-${audioFormat}.js`;
 
 		return new Promise((resolve, reject) => {
 			fetch(url).then(function (res) {
@@ -1061,9 +1028,6 @@ MIDI.player = MIDI.player || {};
 			setTimeout(waitForEnd, 1);
 		};
 
-
-		/* Load audio file: streaming | base64 | arraybuffer
-		---------------------------------------------------------------------- */
 		function loadAudio(url, onsuccess, onerror) {
 			if (useStreamingBuffer) {
 				var audio = new Audio();
@@ -1098,14 +1062,6 @@ MIDI.player = MIDI.player || {};
 		};
 	})();
 })(MIDI);
-
-/*
-	----------------------------------------------------------------------
-	Web MIDI API - Native Soundbanks
-	----------------------------------------------------------------------
-	http://webaudio.github.io/web-midi-api/
-	----------------------------------------------------------------------
-*/
 
 (function(MIDI) { 'use strict';
 
@@ -1179,7 +1135,7 @@ MIDI.player = MIDI.player || {};
 			} else { // no support
 				return;
 			}
-			///
+
 			MIDI.loadPlugin(opts);
 		};
 		///
