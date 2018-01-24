@@ -303,55 +303,9 @@ MIDI.player = MIDI.player || {};
 
 (function(MIDI) {
 	MIDI.DEBUG = true;
-	MIDI.soundfontUrl = './soundfont/';
 
-	/*
-	 * loadPlugin
-	 *
-	 * opts{}
-	 *
-	 * returns - Promise
-	 */
 	MIDI.loadPlugin = function(opts = {}) {
 		opts.api = opts.api || MIDI.__api;
-
-		function onDetect(supports) {
-			var hash = location.hash;
-			var api = '';
-
-			/// use the most appropriate plugin if not specified
-			if (supports[opts.api]) {
-				api = opts.api;
-			} else if (supports[hash.substr(1)]) {
-				api = hash.substr(1);
-			} else if (supports.webmidi) {
-				api = 'webmidi';
-			} else if (window.AudioContext) { // Chrome
-				api = 'webaudio';
-			} else if (window.Audio) { // Firefox
-				api = 'audiotag';
-			}
-
-			if (connect[api]) {
-				/// use audio/ogg when supported
-				if (opts.audioFormat) {
-					var audioFormat = opts.audioFormat;
-				} else { // use best quality
-					var audioFormat = supports['audio/ogg'] ? 'ogg' : 'mp3';
-				}
-
-				/// load the specified plugin
-				MIDI.__api = api;
-				MIDI.__audioFormat = audioFormat;
-				MIDI.supports = supports;
-				MIDI.loadProgram(opts);
-			}
-		};
-
-		///
-		if (opts.soundfontUrl) {
-			MIDI.soundfontUrl = opts.soundfontUrl;
-		}
 
 		return new Promise((resolve) => {
 			const supports = {
@@ -362,12 +316,18 @@ MIDI.player = MIDI.player || {};
 				'audio/mpeg': true,
 			};
 
-			MIDI.supports = supports;
+			const api = 'webaudio'; // 'webmidi', 'audiotag'
 
-			/// Detect the best type of audio to use
-			if (MIDI.supports) {
-				onDetect(MIDI.supports);
+			if (connect[api]) {
+				const audioFormat = 'ogg';
+
+				/// load the specified plugin
+				MIDI.__api = api;
+				MIDI.__audioFormat = audioFormat;
+				MIDI.supports = supports;
+				MIDI.loadProgram(opts);
 			}
+
 			resolve();
 		});
 	};
@@ -408,61 +368,48 @@ MIDI.player = MIDI.player || {};
 		};
 	})();
 
-	var connect = {
-		webmidi: function(opts) {
-			// cant wait for this to be standardized!
-			MIDI.WebMIDI.connect(opts);
-		},
-		audiotag: function(opts) {
-			// works ok, kinda like a drunken tuna fish, across the board
-			// http://caniuse.com/audio
-			requestQueue(opts, 'AudioTag');
-		},
+	const connect = {
 		webaudio: function(opts) {
-			// works awesome! safari, chrome and firefox support
-			// http://caniuse.com/web-audio
-			requestQueue(opts, 'WebAudio');
-		}
-	};
+			const context = 'WebAudio';
 
-	function requestQueue(opts, context) {
-		var audioFormat = opts.format;
-		var instruments = opts.instruments;
-		var onerror = opts.onerror;
-		var pending = instruments.length;
+			var audioFormat = opts.format;
+			var instruments = opts.instruments;
+			var onerror = opts.onerror;
+			var pending = instruments.length;
 
-		function onEnd() {
-			MIDI[context].connect(opts);
-		};
+			function onEnd() {
+				MIDI[context].connect(opts);
+			};
 
-		if (!instruments.length) {
-			onEnd();
-		}
-
-		for (var i = 0; i < instruments.length; i ++) {
-			var programId = instruments[i];
-			if (MIDI.Soundfont[programId]) { // already loaded
-				pending -= 1;
-
-				if (pending === 0) {
-					onEnd();
-				}
-
-				return;
+			if (!instruments.length) {
+				onEnd();
 			}
 
-			// needs to be requested
-			sendRequest(instruments[i], audioFormat).then(() => {
-				pending -= 1;
+			for (var i = 0; i < instruments.length; i ++) {
+				var programId = instruments[i];
+				if (MIDI.Soundfont[programId]) { // already loaded
+					pending -= 1;
 
-				if (pending === 0) {
-					onEnd();
+					if (pending === 0) {
+						onEnd();
+					}
+
+					return;
 				}
-			}).catch((e) => {
-				console.error(e);
 
-				onerror();
-			});
+				// needs to be requested
+				sendRequest(instruments[i], audioFormat).then(() => {
+					pending -= 1;
+
+					if (pending === 0) {
+						onEnd();
+					}
+				}).catch((e) => {
+					console.error(e);
+
+					onerror();
+				});
+			}
 		}
 	};
 
