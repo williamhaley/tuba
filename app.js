@@ -302,8 +302,6 @@ MIDI.Soundfont = MIDI.Soundfont || {};
 MIDI.player = MIDI.player || {};
 
 (function(MIDI) {
-	MIDI.DEBUG = true;
-
 	MIDI.loadPlugin = function(opts = {}) {
 		opts.api = opts.api || MIDI.__api;
 
@@ -503,58 +501,60 @@ MIDI.player = MIDI.player || {};
 			console.log(`bufferId: ${bufferId}`);
 
 			var buffer = audioBuffers[bufferId];
-			if (buffer) {
-				/// convert relative delay to absolute delay
-				if (delay < ctx.currentTime) {
-					delay += ctx.currentTime;
-				}
+			if (!buffer) {
+				MIDI.handleError('no buffer', arguments);
 
-				/// create audio buffer
-				if (useStreamingBuffer) {
-					var source = ctx.createMediaElementSource(buffer);
-				} else { // XMLHTTP buffer
-					var source = ctx.createBufferSource();
-					source.buffer = buffer;
-				}
+				return;
+			}
 
-				/// add effects to buffer
-				if (effects) {
-					var chain = source;
-					for (var key in effects) {
-						chain.connect(effects[key].input);
-						chain = effects[key];
-					}
-				}
+			// convert relative delay to absolute delay
+			if (delay < ctx.currentTime) {
+				delay += ctx.currentTime;
+			}
 
-				/// add gain + pitchShift
-				var gain = (velocity / 127) * (masterVolume / 127) * 2 - 1;
-				source.connect(ctx.destination);
-				source.playbackRate.value = 1; // pitch shift
-				source.gainNode = ctx.createGain(); // gain
-				source.gainNode.connect(ctx.destination);
-				source.gainNode.gain.value = Math.min(1.0, Math.max(-1.0, gain));
-				source.connect(source.gainNode);
-				///
-				if (useStreamingBuffer) {
-					if (delay) {
-						return setTimeout(function() {
-							buffer.currentTime = 0;
-							buffer.play()
-						}, delay * 1000);
-					} else {
+			/// create audio buffer
+			if (useStreamingBuffer) {
+				var source = ctx.createMediaElementSource(buffer);
+			} else { // XMLHTTP buffer
+				var source = ctx.createBufferSource();
+				source.buffer = buffer;
+			}
+
+			/// add effects to buffer
+			if (effects) {
+				var chain = source;
+				for (var key in effects) {
+					chain.connect(effects[key].input);
+					chain = effects[key];
+				}
+			}
+
+			/// add gain + pitchShift
+			var gain = (velocity / 127) * (masterVolume / 127) * 2 - 1;
+			source.connect(ctx.destination);
+			source.playbackRate.value = 1; // pitch shift
+			source.gainNode = ctx.createGain(); // gain
+			source.gainNode.connect(ctx.destination);
+			source.gainNode.gain.value = Math.min(1.0, Math.max(-1.0, gain));
+			source.connect(source.gainNode);
+			///
+			if (useStreamingBuffer) {
+				if (delay) {
+					return setTimeout(function() {
 						buffer.currentTime = 0;
 						buffer.play()
-					}
+					}, delay * 1000);
 				} else {
-					source.start(delay || 0);
+					buffer.currentTime = 0;
+					buffer.play()
 				}
-				///
-				sources[channelId + 'x' + noteId] = source;
-				///
-				return source;
 			} else {
-				MIDI.handleError('no buffer', arguments);
+				source.start(delay || 0);
 			}
+
+			sources[channelId + 'x' + noteId] = source;
+
+			return source;
 		};
 
 		midi.noteOff = function(channelId, noteId, delay) {
@@ -604,61 +604,9 @@ MIDI.player = MIDI.player || {};
 			}
 		};
 
-		midi.chordOn = function(channel, chord, velocity, delay) {
-			var res = {};
-			for (var n = 0, note, len = chord.length; n < len; n++) {
-				res[note = chord[n]] = midi.noteOn(channel, note, velocity, delay);
-			}
-			return res;
-		};
-
-		midi.chordOff = function(channel, chord, delay) {
-			var res = {};
-			for (var n = 0, note, len = chord.length; n < len; n++) {
-				res[note = chord[n]] = midi.noteOff(channel, note, delay);
-			}
-			return res;
-		};
-
-		midi.stopAllNotes = function() {
-			for (var sid in sources) {
-				var delay = 0;
-				if (delay < ctx.currentTime) {
-					delay += ctx.currentTime;
-				}
-				var source = sources[sid];
-				source.gain.linearRampToValueAtTime(1, delay);
-				source.gain.linearRampToValueAtTime(0, delay + 0.3);
-				if (source.noteOff) { // old api
-					source.noteOff(delay + 0.3);
-				} else { // new api
-					source.stop(delay + 0.3);
-				}
-				delete sources[sid];
-			}
-		};
-
-		midi.setEffects = function(list) {
-			if (ctx.tunajs) {
-				for (var n = 0; n < list.length; n ++) {
-					var data = list[n];
-					var effect = new ctx.tunajs[data.type](data);
-					effect.connect(ctx.destination);
-					effects[data.type] = effect;
-				}
-			} else {
-				MIDI.handleError('effects not installed.', arguments);
-				return;
-			}
-		};
-
 		midi.connect = function(opts) {
 			MIDI.setDefaultPlugin(midi);
 			midi.setContext(ctx || createAudioContext(), opts.onsuccess);
-		};
-
-		midi.getContext = function() {
-			return ctx;
 		};
 
 		midi.setContext = function(newCtx, onsuccess, onerror) {
@@ -706,7 +654,6 @@ MIDI.player = MIDI.player || {};
 					if (--bufferPending[programId] === 0) {
 						var percent = index / 87;
 						soundfont.isLoaded = true;
-						MIDI.DEBUG && console.log('loaded: ', instrument);
 						waitForEnd(instrument);
 					}
 				}).catch(() => {
