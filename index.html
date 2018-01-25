@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+	<title>Tuba</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+<ul class="set">
+	<li class="white" onclick="playNote('D2');">D2</li>
+	<li class="black" onclick="playNote('Eb2');">Eb2</li>
+	<li class="white" onclick="playNote('G2');">G2</li>
+	<li class="black" onclick="playNote('F2');">F2</li>
+	<li class="white" onclick="playNote('Gb2');">Gb2</li>
+	<li class="black" onclick="playNote('G2');">G2</li>
+	<li class="white" onclick="playNote('Ab2');">Ab2</li>
+	<li class="white" onclick="playNote('A2');">A2</li>
+	<li class="black" onclick="playNote('Bb2');">Bb2</li>
+	<li class="white" onclick="playNote('B2');">B2</li>
+	<li class="black" onclick="playNote('C3');">C3</li>
+	<li class="white" onclick="playNote('Db3');">Db3</li>
+</ul>
+
+<script src="./soundfont-player.js"></script>
+<script>
+const ctx = new AudioContext();
+const instrument = 'tuba';
+
+Soundfont.instrument(ctx, instrument).then(function (tuba) {
+  window.playNote = function (note) {
+    tuba.play(note, 0, {
+      duration: 0.5
+    });
+  };
+});
+</script>
+</body>
+</html>
+
