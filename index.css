@@ -25,6 +25,7 @@ li {
   align-items: flex-end;
   padding-bottom: 1em;
   justify-content: center;
+  cursor: pointer;
 
   -webkit-touch-callout: none;
   -webkit-user-select: none;
