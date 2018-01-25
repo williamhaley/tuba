@@ -69,419 +69,418 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({9:[function(require,module,exports) {
-module.exports="49870b65738ff8fde16cbd56184d5235.dat";
-},{}],5:[function(require,module,exports) {
-"use strict";
+})({15:[function(require,module,exports) {
+module.exports="/dist/49870b65738ff8fde16cbd56184d5235.dat";
+},{}],11:[function(require,module,exports) {
+'use strict';
 
-var _tubaOgg = require("./tuba-ogg.dat");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _tubaOgg = require('./tuba-ogg.dat');
 
 var _tubaOgg2 = _interopRequireDefault(_tubaOgg);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Base64Binary = {
-	_keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-
-	/* will return a  Uint8Array type */
-	decodeArrayBuffer: function (base64String) {
-		// TODO WFH What is this?
-		// Seems like we're estimating the size of the buffer?
-		let bytes = Math.ceil(3 * base64String.length / 4.0);
-
-		let arrayBuffer = new ArrayBuffer(bytes);
-
-		this.decode(base64String, arrayBuffer, bytes);
-
-		return arrayBuffer;
-	},
-
-	decode: function (base64String, arrayBuffer, bytes) {
-		//get last chars to see if are valid
-		var lkey1 = this._keyStr.indexOf(base64String.charAt(base64String.length - 1));
-		var lkey2 = this._keyStr.indexOf(base64String.charAt(base64String.length - 1));
-
-		if (lkey1 == 64) bytes--; //padding chars, so skip
-		if (lkey2 == 64) bytes--; //padding chars, so skip
-
-		var chr1, chr2, chr3;
-		var enc1, enc2, enc3, enc4;
-		var i = 0;
-		var j = 0;
-
-		let uarray = new Uint8Array(arrayBuffer);
-
-		base64String = base64String.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-		// TODO WFH Ah, this may explain our 3 * x / 4
-		for (i = 0; i < bytes; i += 3) {
-			//get the 3 octects in 4 ascii chars
-			enc1 = this._keyStr.indexOf(base64String.charAt(j++));
-			enc2 = this._keyStr.indexOf(base64String.charAt(j++));
-			enc3 = this._keyStr.indexOf(base64String.charAt(j++));
-			enc4 = this._keyStr.indexOf(base64String.charAt(j++));
-
-			chr1 = enc1 << 2 | enc2 >> 4;
-			chr2 = (enc2 & 15) << 4 | enc3 >> 2;
-			chr3 = (enc3 & 3) << 6 | enc4;
-
-			uarray[i] = chr1;
-			if (enc3 != 64) uarray[i + 1] = chr2;
-			if (enc4 != 64) uarray[i + 2] = chr3;
-		}
-
-		return uarray;
-	}
+const spec = {
+  id: 'tuba',
+  name: 'Tuba',
+  program: 58
 }; // Gets a URL referencing the asset.
 
 
-let MIDI = window.MIDI = { Soundfont: {} };
+var Base64Binary = {
+  _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+  /* will return a  Uint8Array type */
+  decodeArrayBuffer: function (base64String) {
+    let bytes = Math.ceil(3 * base64String.length / 4.0);
+
+    let arrayBuffer = new ArrayBuffer(bytes);
+
+    this.decode(base64String, arrayBuffer, bytes);
+
+    return arrayBuffer;
+  },
+
+  decode: function (base64String, arrayBuffer, bytes) {
+    //get last chars to see if are valid
+    var lkey1 = this._keyStr.indexOf(base64String.charAt(base64String.length - 1));
+    var lkey2 = this._keyStr.indexOf(base64String.charAt(base64String.length - 1));
+
+    if (lkey1 == 64) bytes--; //padding chars, so skip
+    if (lkey2 == 64) bytes--; //padding chars, so skip
+
+    var chr1, chr2, chr3;
+    var enc1, enc2, enc3, enc4;
+    var i = 0;
+    var j = 0;
+
+    let uarray = new Uint8Array(arrayBuffer);
+
+    base64String = base64String.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+    // TODO WFH Ah, this may explain our 3 * x / 4
+    for (i = 0; i < bytes; i += 3) {
+      //get the 3 octects in 4 ascii chars
+      enc1 = this._keyStr.indexOf(base64String.charAt(j++));
+      enc2 = this._keyStr.indexOf(base64String.charAt(j++));
+      enc3 = this._keyStr.indexOf(base64String.charAt(j++));
+      enc4 = this._keyStr.indexOf(base64String.charAt(j++));
+
+      chr1 = enc1 << 2 | enc2 >> 4;
+      chr2 = (enc2 & 15) << 4 | enc3 >> 2;
+      chr3 = (enc3 & 3) << 6 | enc4;
+
+      uarray[i] = chr1;
+      if (enc3 != 64) uarray[i + 1] = chr2;
+      if (enc4 != 64) uarray[i + 2] = chr3;
+    }
+
+    return uarray;
+  }
+};
+
+let MIDI = { Soundfont: {} };
 
 (function (Context) {
-	var contextMethods = [["createGainNode", "createGain"], ["createDelayNode", "createDelay"], ["createJavaScriptNode", "createScriptProcessor"]];
+  var contextMethods = [["createGainNode", "createGain"], ["createDelayNode", "createDelay"], ["createJavaScriptNode", "createScriptProcessor"]];
 
-	let proto = Context.prototype;
-	let instance = new Context();
-	let sourceProto = Object.getPrototypeOf(instance.createBufferSource());
+  let proto = Context.prototype;
+  let instance = new Context();
+  let sourceProto = Object.getPrototypeOf(instance.createBufferSource());
 
-	if (typeof sourceProto.start !== 'function') {
-		if (typeof sourceProto.noteOn === 'function') {
-			sourceProto.start = function (when, offset, duration) {
-				switch (arguments.length) {
-					case 0:
-						throw new Error("Not enough arguments.");
-					case 1:
-						this.noteOn(when);
-						break;
-					case 2:
-						if (this.buffer) {
-							this.noteGrainOn(when, offset, this.buffer.duration - offset);
-						} else {
-							throw new Error("Missing AudioBuffer");
-						}
-						break;
-					case 3:
-						this.noteGrainOn(when, offset, duration);
-				}
-			};
-		}
-	}
+  if (typeof sourceProto.noteOn !== 'function') {
+    sourceProto.noteOn = sourceProto.start;
+  }
 
-	if (typeof sourceProto.noteOn !== 'function') {
-		sourceProto.noteOn = sourceProto.start;
-	}
+  if (typeof sourceProto.noteGrainOn !== 'function') {
+    sourceProto.noteGrainOn = sourceProto.start;
+  }
 
-	if (typeof sourceProto.noteGrainOn !== 'function') {
-		sourceProto.noteGrainOn = sourceProto.start;
-	}
+  contextMethods.forEach(function (names) {
+    while (names.length) {
+      let name = names.pop();
 
-	if (typeof sourceProto.stop !== 'function') {
-		sourceProto.stop = sourceProto.noteOff;
-	}
-
-	if (typeof sourceProto.noteOff !== 'function') {
-		sourceProto.noteOff = sourceProto.stop;
-	}
-
-	contextMethods.forEach(function (names) {
-		while (names.length) {
-			let name = names.pop();
-			this[names.pop()] = this[name];
-		}
-	}, proto);
+      this[names.pop()] = this[name];
+    }
+  }, proto);
 })(window.AudioContext);
 
-MIDI.getMono = function (channelId) {
-	var channel = channels[channelId];
-	if (channel) {
-		return channel['mono'];
-	}
-};
+// C8  == 108
+let keyToNote = function (memo = {}) {
+  var A0 = 0x15; // first note
+  var C8 = 0x6C; // last note
 
-MIDI.setMono = function (channelId, truthy, delay) {
-	if (!isFinite(truthy)) {
-		return;
-	}
+  var number2key = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-	var channel = channels[channelId];
-	if (channel) {
-		if (delay) {
-			setTimeout(function () {
-				//- is there a better option?
-				channel['mono'] = value;
-			}, delay);
-		} else {
-			channel['mono'] = value;
-		}
-	}
-};
+  for (var n = A0; n <= C8; n++) {
+    var octave = (n - 12) / 12 >> 0;
+    var name = number2key[n % 12] + octave;
 
-MIDI.keyToNote = {}; // C8  == 108
+    memo[name] = n;
+  }
 
-(function () {
-	var A0 = 0x15; // first note
-	var C8 = 0x6C; // last note
-	var number2key = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-	for (var n = A0; n <= C8; n++) {
-		var octave = (n - 12) / 12 >> 0;
-		var name = number2key[n % 12] + octave;
-		MIDI.keyToNote[name] = n;
-	}
-})();
-
-MIDI.channels = function () {
-	var res = {};
-	for (var number = 0; number <= 15; number++) {
-		res[number] = {
-			number: number,
-			program: number,
-			pitchBend: 0,
-			mute: false,
-			mono: false,
-			omni: false,
-			solo: false
-		};
-	}
-	return res;
+  return memo;
 }();
 
-const API = 'webaudio'; // 'webmidi', 'audiotag'
-const FORMAT = 'ogg';
+let channels = function (memo = {}) {
+  for (var number = 0; number <= 15; number++) {
+    memo[number] = {
+      number: number,
+      program: number,
+      pitchBend: 0,
+      mute: false,
+      mono: false,
+      omni: false,
+      solo: false
+    };
+  }
+
+  return memo;
+}();
 
 MIDI.loadPlugin = function (opts = {}) {
-	return new Promise(resolve => {
-		const context = 'WebAudio';
+  return new Promise(resolve => {
+    if (MIDI.Soundfont[opts.instrument]) {
+      midi.connect(opts);
 
-		if (MIDI.Soundfont[opts.instrument]) {
-			MIDI[context].connect(opts);
+      return resolve();
+    }
 
-			return resolve();
-		}
+    fetch(_tubaOgg2.default).then(function (res) {
+      let script = document.createElement('script');
+      script.language = 'javascript';
+      script.type = 'text/javascript';
+      res.text().then(text => {
+        script.text = text;
+        document.body.appendChild(script);
 
-		sendRequest(opts.instrument, FORMAT).then(() => {
-			MIDI[context].connect(opts);
-		}).catch(e => {
-			console.error(e);
-		});
+        midi.connect(opts);
 
-		resolve();
-	});
+        resolve();
+      });
+    }).catch(function (e) {
+      reject();
+    });
+  });
 };
 
-function sendRequest(programId) {
-	return new Promise((resolve, reject) => {
-		fetch(_tubaOgg2.default).then(function (res) {
-			let script = document.createElement('script');
-			script.language = 'javascript';
-			script.type = 'text/javascript';
-			res.text().then(text => {
-				script.text = text;
-				document.body.appendChild(script);
+let midi = function (midi = {}) {
+  var audioContext = null;
+  var midiAudioContext;
+  var sources = {};
+  var audioBuffers = {};
 
-				resolve();
-			});
-		}).catch(function (e) {
-			reject();
-		});
-	});
+  midi.noteOn = function (channelId, noteId, velocity, volume) {
+    var channel = channels[channelId];
+    var instrument = channel.program;
+
+    instrument = spec.program;
+    console.warn(`overriding instrument id: ${instrument}`);
+
+    var bufferId = instrument + 'x' + noteId;
+
+    console.log(`bufferId: ${bufferId}`);
+
+    var buffer = audioBuffers[bufferId];
+    if (!buffer) {
+      console.error('no buffer', arguments);
+
+      return;
+    }
+
+    var source = midiAudioContext.createBufferSource();
+
+    source.buffer = buffer;
+
+    console.log(`note duration: ${source.buffer.duration}`);
+
+    var gain = velocity / 127 * (volume / 127) * 2 - 1;
+
+    console.log(`gain: ${gain}`);
+
+    source.connect(midiAudioContext.destination);
+    source.playbackRate.value = 1;
+    source.gainNode = midiAudioContext.createGain();
+    source.gainNode.connect(midiAudioContext.destination);
+    source.gainNode.gain.value = Math.min(1.0, Math.max(-1.0, gain));
+    source.connect(source.gainNode);
+
+    source.start();
+
+    sources[channelId + 'x' + noteId] = source;
+
+    return source;
+  };
+
+  midi.connect = function () {
+    // TODO WFH This is insane.
+    for (var key in midi) {
+      console.log(key);
+      MIDI[key] = midi[key];
+    }
+
+    midiAudioContext = new window.AudioContext();
+
+    var keyURLs = [];
+    var notes = keyToNote;
+    for (var key in notes) {
+      keyURLs.push(key);
+    }
+
+    function waitForEnd(instrument) {
+      for (var key in bufferPending) {
+        // has pending items
+        if (bufferPending[key]) {
+          return;
+        }
+      }
+    };
+
+    function requestAudio(soundfont, programId, index, key) {
+      var keyURL = soundfont[key];
+      if (!keyURL) {
+        return;
+      }
+
+      bufferPending[programId]++;
+
+      var base64 = keyURL.split(',')[1];
+      var buffer = Base64Binary.decodeArrayBuffer(base64);
+
+      midiAudioContext.decodeAudioData(buffer).then(decodedBuffer => {
+        decodedBuffer.id = key;
+        var noteId = keyToNote[key];
+        audioBuffers[programId + 'x' + noteId] = decodedBuffer;
+
+        if (--bufferPending[programId] === 0) {
+          soundfont.isLoaded = true;
+          waitForEnd(instrument);
+        }
+      }).catch(() => {
+        console.error('audio could not load', arguments);
+      });
+    };
+
+    var bufferPending = {};
+
+    var soundfonts = MIDI.Soundfont;
+
+    for (var instrument in soundfonts) {
+      var soundfont = soundfonts[instrument];
+      if (soundfont.isLoaded) {
+        continue;
+      }
+
+      bufferPending[spec.program] = 0;
+
+      for (var index = 0; index < keyURLs.length; index++) {
+        requestAudio(soundfont, spec.program, index, keyURLs[index]);
+      }
+    }
+
+    setTimeout(waitForEnd, 1);
+  };
+
+  return midi;
+}();
+
+exports.default = {
+  MIDI
 };
+},{"./tuba-ogg.dat":15}],5:[function(require,module,exports) {
+'use strict';
 
-(function () {
-	var audioContext = null; // new AudioContext();
-	var midi = MIDI.WebAudio = { api: 'webaudio' };
-	var midiAudioContext; // audio context
-	var sources = {};
-	var masterVolume = 127;
-	var audioBuffers = {};
+var _midi = require('./midi');
 
-	midi.audioBuffers = audioBuffers;
+var _midi2 = _interopRequireDefault(_midi);
 
-	midi.send = function (data, delay) {};
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	midi.setController = function (channelId, type, value, delay) {};
+window.MIDI = _midi2.default.MIDI;
+},{"./midi":11}],17:[function(require,module,exports) {
 
-	midi.setVolume = function (channelId, volume, delay) {
-		if (delay) {
-			setTimeout(function () {
-				masterVolume = volume;
-			}, delay * 1000);
-		} else {
-			masterVolume = volume;
-		}
-	};
+var global = (1, eval)('this');
+var OldModule = module.bundle.Module;
+function Module() {
+  OldModule.call(this);
+  this.hot = {
+    accept: function (fn) {
+      this._acceptCallback = fn || function () {};
+    },
+    dispose: function (fn) {
+      this._disposeCallback = fn;
+    }
+  };
+}
 
-	midi.pitchBend = function (channelId, bend, delay) {
-		var channel = MIDI.channels[channelId];
-		if (channel) {
-			if (delay) {
-				setTimeout(function () {
-					channel.pitchBend = bend;
-				}, delay);
-			} else {
-				channel.pitchBend = bend;
-			}
-		}
-	};
+module.bundle.Module = Module;
 
-	midi.noteOn = function (channelId, noteId, velocity, delay) {
-		delay = delay || 0;
+if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
+  var hostname = '' || location.hostname;
+  var ws = new WebSocket('ws://' + hostname + ':' + '64478' + '/');
+  ws.onmessage = function (event) {
+    var data = JSON.parse(event.data);
 
-		/// check whether the note exists
-		var channel = MIDI.channels[channelId];
-		var instrument = channel.program;
+    if (data.type === 'update') {
+      data.assets.forEach(function (asset) {
+        hmrApply(global.require, asset);
+      });
 
-		console.warn('overriding instrument id');
-		instrument = 58;
+      data.assets.forEach(function (asset) {
+        if (!asset.isNew) {
+          hmrAccept(global.require, asset.id);
+        }
+      });
+    }
 
-		var bufferId = instrument + 'x' + noteId;
+    if (data.type === 'reload') {
+      ws.close();
+      ws.onclose = function () {
+        location.reload();
+      };
+    }
 
-		console.log(`bufferId: ${bufferId}`);
+    if (data.type === 'error-resolved') {
+      console.log('[parcel] ✨ Error resolved');
+    }
 
-		var buffer = audioBuffers[bufferId];
-		if (!buffer) {
-			console.error('no buffer', arguments);
+    if (data.type === 'error') {
+      console.error('[parcel] 🚨  ' + data.error.message + '\n' + 'data.error.stack');
+    }
+  };
+}
 
-			return;
-		}
+function getParents(bundle, id) {
+  var modules = bundle.modules;
+  if (!modules) {
+    return [];
+  }
 
-		// convert relative delay to absolute delay
-		if (delay < midiAudioContext.currentTime) {
-			delay += midiAudioContext.currentTime;
-		}
+  var parents = [];
+  var k, d, dep;
 
-		var source = midiAudioContext.createBufferSource();
-		source.buffer = buffer;
+  for (k in modules) {
+    for (d in modules[k][1]) {
+      dep = modules[k][1][d];
+      if (dep === id || Array.isArray(dep) && dep[dep.length - 1] === id) {
+        parents.push(+k);
+      }
+    }
+  }
 
-		/// add gain + pitchShift
-		var gain = velocity / 127 * (masterVolume / 127) * 2 - 1;
-		source.connect(midiAudioContext.destination);
-		source.playbackRate.value = 1; // pitch shift
-		source.gainNode = midiAudioContext.createGain(); // gain
-		source.gainNode.connect(midiAudioContext.destination);
-		source.gainNode.gain.value = Math.min(1.0, Math.max(-1.0, gain));
-		source.connect(source.gainNode);
-		source.start(delay || 0);
+  if (bundle.parent) {
+    parents = parents.concat(getParents(bundle.parent, id));
+  }
 
-		sources[channelId + 'x' + noteId] = source;
+  return parents;
+}
 
-		return source;
-	};
+function hmrApply(bundle, asset) {
+  var modules = bundle.modules;
+  if (!modules) {
+    return;
+  }
 
-	midi.noteOff = function (channelId, noteId, delay) {
-		delay = delay || 0;
+  if (modules[asset.id] || !bundle.parent) {
+    var fn = new Function('require', 'module', 'exports', asset.generated.js);
+    asset.isNew = !modules[asset.id];
+    modules[asset.id] = [fn, asset.deps];
+  } else if (bundle.parent) {
+    hmrApply(bundle.parent, asset);
+  }
+}
 
-		/// check whether the note exists
-		var channel = MIDI.channels[channelId];
-		var instrument = channel.program;
-		var bufferId = instrument + 'x' + noteId;
-		var buffer = audioBuffers[bufferId];
-		if (buffer) {
-			if (delay < midiAudioContext.currentTime) {
-				delay += midiAudioContext.currentTime;
-			}
-			///
-			var source = sources[channelId + 'x' + noteId];
-			if (source) {
-				if (source.gainNode) {
-					// @Miranet: 'the values of 0.2 and 0.3 could of course be used as
-					// a 'release' parameter for ADSR like time settings.'
-					// add { 'metadata': { release: 0.3 } } to soundfont files
-					var gain = source.gainNode.gain;
-					gain.linearRampToValueAtTime(gain.value, delay);
-					gain.linearRampToValueAtTime(-1.0, delay + 0.3);
-				}
+function hmrAccept(bundle, id) {
+  var modules = bundle.modules;
+  if (!modules) {
+    return;
+  }
 
-				if (source.noteOff) {
-					source.noteOff(delay + 0.5);
-				} else {
-					source.stop(delay + 0.5);
-				}
+  if (!modules[id] && bundle.parent) {
+    return hmrAccept(bundle.parent, id);
+  }
 
-				delete sources[channelId + 'x' + noteId];
+  var cached = bundle.cache[id];
+  if (cached && cached.hot._disposeCallback) {
+    cached.hot._disposeCallback();
+  }
 
-				return source;
-			}
-		}
-	};
+  delete bundle.cache[id];
+  bundle(id);
 
-	midi.connect = function () {
-		// TODO WFH This is insane.
-		for (var key in midi) {
-			MIDI[key] = midi[key];
-		}
+  cached = bundle.cache[id];
+  if (cached && cached.hot && cached.hot._acceptCallback) {
+    cached.hot._acceptCallback();
+    return true;
+  }
 
-		midiAudioContext = new window.AudioContext();
-
-		var keyURLs = [];
-		var notes = MIDI.keyToNote;
-		for (var key in notes) {
-			keyURLs.push(key);
-		}
-
-		function waitForEnd(instrument) {
-			for (var key in bufferPending) {
-				// has pending items
-				if (bufferPending[key]) {
-					return;
-				}
-			}
-		};
-
-		function requestAudio(soundfont, programId, index, key) {
-			var keyURL = soundfont[key];
-			if (!keyURL) {
-				return;
-			}
-
-			bufferPending[programId]++;
-
-			loadAudio(keyURL).then(buffer => {
-				buffer.id = key;
-				var noteId = MIDI.keyToNote[key];
-				audioBuffers[programId + 'x' + noteId] = buffer;
-
-				if (--bufferPending[programId] === 0) {
-					soundfont.isLoaded = true;
-					waitForEnd(instrument);
-				}
-			}).catch(() => {
-				console.error('audio could not load', arguments);
-			});
-		};
-		///
-		var bufferPending = {};
-
-		var soundfonts = MIDI.Soundfont;
-		for (var instrument in soundfonts) {
-			var soundfont = soundfonts[instrument];
-			if (soundfont.isLoaded) {
-				continue;
-			}
-
-			const spec = {
-				id: 'tuba',
-				name: 'Tuba',
-				program: 58
-			};
-
-			bufferPending[spec.program] = 0;
-
-			for (var index = 0; index < keyURLs.length; index++) {
-				requestAudio(soundfont, spec.program, index, keyURLs[index]);
-			}
-
-			console.log(MIDI.keyToNote);
-		}
-		///
-		setTimeout(waitForEnd, 1);
-	};
-
-	function loadAudio(url) {
-		return new Promise((resolve, reject) => {
-			var base64 = url.split(',')[1];
-			var buffer = Base64Binary.decodeArrayBuffer(base64);
-			midiAudioContext.decodeAudioData(buffer, resolve, reject);
-		});
-	};
-})();
-},{"./tuba-ogg.dat":9}]},{},[5])
+  return getParents(global.require, id).some(function (id) {
+    return hmrAccept(global.require, id);
+  });
+}
+},{}]},{},[17,5])
+//# sourceMappingURL=/dist/b2b3fa487330c5902ea92b4863c2371b.map

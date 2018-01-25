@@ -138,7 +138,7 @@ module.exports = reloadCSS;
         module.hot.dispose(reloadCSS);
         module.hot.accept(reloadCSS);
       
-},{"_css_loader":9}],15:[function(require,module,exports) {
+},{"_css_loader":9}],17:[function(require,module,exports) {
 
 var global = (1, eval)('this');
 var OldModule = module.bundle.Module;
@@ -158,7 +158,7 @@ module.bundle.Module = Module;
 
 if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
-  var ws = new WebSocket('ws://' + hostname + ':' + '59519' + '/');
+  var ws = new WebSocket('ws://' + hostname + ':' + '64478' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -259,5 +259,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.require, id);
   });
 }
-},{}]},{},[15])
+},{}]},{},[17])
 //# sourceMappingURL=/dist/6db4b2ce9be575ec294a5465ceac51c7.map
