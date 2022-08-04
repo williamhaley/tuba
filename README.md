@@ -1,19 +1,5 @@
 # Tuba
 
-Run
-
-```
-npm install -g parcel-bundler
-npm install
-npm start
-```
-
-Build
-
-```
-npm run build
-```
-
 # Sources
 
 * [Source code](https://github.com/danigb/soundfont-player)
